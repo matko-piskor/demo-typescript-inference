@@ -15,6 +15,19 @@ const Books: NextPage = () => {
             .catch(console.error);
     }, []);
 
+    const onDelete = React.useCallback((id: number) => {
+        fetch(`/api/books/${id}/delete`, {
+            method: 'DELETE',
+        })
+            .then(() => {
+                fetch('/api/books')
+                    .then((res) => res.json())
+                    .then(setBooks)
+                    .catch(console.error);
+            })
+            .catch(console.error);
+    }, []);
+
     return (
         <div>
             <Head>
@@ -26,7 +39,14 @@ const Books: NextPage = () => {
                     Back
                 </h3>
                 <h1 className='text-3xl mb-7'>Books</h1>
-                <button className='mb-7 cursor-pointer'>New</button>
+                <button
+                    className='mb-7 cursor-pointer'
+                    onClick={() => {
+                        router.push(`/books/new`);
+                    }}
+                >
+                    New
+                </button>
                 <div className='flex flex-col w-100'>
                     <div className='bg-slate-400 flex border-slate-800'>
                         <div className='w-full px-2 pz-4 capitalize mx-auto'>
@@ -71,10 +91,18 @@ const Books: NextPage = () => {
                                     {book.categoryId}
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
-                                    <button>Edit</button>
+                                    <button
+                                        onClick={() => {
+                                            router.push(`/books/${book.id}`);
+                                        }}
+                                    >
+                                        Edit
+                                    </button>
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
-                                    <button>Delete</button>
+                                    <button onClick={() => onDelete(book.id)}>
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         ))}

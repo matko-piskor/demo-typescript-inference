@@ -1,45 +1,45 @@
-import CategoryForm from 'components/CategoryForm';
+import BookForm from 'components/BooksForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { Category } from 'utils/models';
+import { Book } from 'utils/models';
 type Props = {
     id: string;
 };
 
-function Category({ id }: Props) {
-    const [category, setCategory] = React.useState<Category>();
+function Book({ id }: Props) {
+    const [book, setBook] = React.useState<Book>();
 
     React.useEffect(() => {
-        fetch(`/api/categories/${id}`)
+        fetch(`/api/books/${id}`)
             .then((res) => res.json())
-            .then(setCategory)
+            .then(setBook)
             .catch(console.error);
     }, [id]);
 
-    const onSubmit = (data: Category) => {
-        fetch(`/api/categories/${id}/edit`, {
-            method: category ? 'PUT' : 'POST',
+    const onSubmit = (data: Book) => {
+        fetch(`/api/books/${id}/edit`, {
+            method: book ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
-            .then(setCategory)
+            .then(setBook)
             .catch(console.error);
     };
 
-    if (!category) {
+    if (!book) {
         return null;
     }
-    return <CategoryForm data={category} onSubmit={onSubmit} />;
+    return <BookForm data={book} onSubmit={onSubmit} />;
 }
 
-function NewCategory() {
+function NewBook() {
     const router = useRouter();
 
-    const onSubmit = (data: Category) => {
+    const onSubmit = (data: Book) => {
         console.log(data);
-        fetch(`/api/categories/new`, {
+        fetch(`/api/books/new`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -47,15 +47,15 @@ function NewCategory() {
             .then((res) => res.json())
             .then((res) => {
                 console.log(res);
-                router.push(`/categories/${res.id}`);
+                router.push(`/books/${res.id}`);
             })
             .catch(console.error);
     };
 
-    return <CategoryForm onSubmit={onSubmit} />;
+    return <BookForm onSubmit={onSubmit} />;
 }
 
-const CategoryWrapper: NextPage = () => {
+const BookWrapper: NextPage = () => {
     const router = useRouter();
 
     const { id } = router.query;
@@ -71,10 +71,10 @@ const CategoryWrapper: NextPage = () => {
     }
 
     if (id === 'new') {
-        return <NewCategory />;
+        return <NewBook />;
     }
 
-    return <Category id={id as string} />;
+    return <Book id={id as string} />;
 };
 
-export default CategoryWrapper;
+export default BookWrapper;
