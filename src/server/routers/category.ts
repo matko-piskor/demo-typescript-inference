@@ -12,11 +12,15 @@ export const categoryRouter = createRouter()
     .query('get-by-id', {
         input: z.object({ id: z.number() }),
         async resolve({ input }) {
-            return await prisma.category.findFirst({
+            const category = await prisma.category.findFirst({
                 where: {
                     id: input.id,
                 },
             });
+            if (!category) {
+                throw new Error("Category doesn't exist");
+            }
+            return category;
         },
     })
     .mutation('create', {

@@ -21,6 +21,9 @@ export const bookRouter = createRouter()
                     id: input.id,
                 },
             });
+            if (!book) {
+                throw new Error("Book doesn't exist");
+            }
             return {
                 ...book,
                 createdAt: book?.createdAt.toISOString(),

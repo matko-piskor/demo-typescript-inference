@@ -1,38 +1,65 @@
 import BookForm from 'components/BooksForm';
 import { useRouter } from 'next/router';
-import { NextPage } from 'next/types';
 import React from 'react';
 import { trpc } from 'utils/trpc';
+import * as portals from 'react-reverse-portal';
+import { CustomPage } from 'pages/_app';
+
 type Props = {
     id: string;
+    portalNode: portals.HtmlPortalNode;
 };
 
-function Book({ id }: Props) {
-    const book = trpc.useQuery(['book.get-by-id', { id: parseInt(id, 10) }]);
+const Book: React.FC<Props> = (props) => {
+    const book = trpc.useQuery(
+        ['book.get-by-id', { id: parseInt(props.id, 10) }],
+        {
+            retry: false,
+        },
+    );
 
     const onSubmit = trpc.useMutation(['book.update']);
 
-    if (book.isError) {
-        return <div>Error</div>;
-    }
+    return (
+        <>
+            {book.isError && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={book.error?.message}
+                />
+            )}
+            {onSubmit.isError && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={onSubmit.error?.message}
+                />
+            )}
+            <BookForm data={book.data} onSubmit={onSubmit.mutate} />
+        </>
+    );
+};
 
-    if (!book.data) {
-        return null;
-    }
-    return <BookForm data={book.data} onSubmit={onSubmit.mutate} />;
-}
-
-function NewBook() {
+function NewBook(props: Omit<Props, 'id'>) {
     const router = useRouter();
 
     const onSubmit = trpc.useMutation(['book.create'], {
         onSuccess: () => router.push('/books'),
     });
 
-    return <BookForm onSubmit={onSubmit.mutate} />;
+    return (
+        <>
+            {onSubmit.isError && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={onSubmit.error?.message}
+                />
+            )}
+            <BookForm onSubmit={onSubmit.mutate} />
+        </>
+    );
 }
 
-const BookWrapper: NextPage = () => {
+const BookWrapper: CustomPage = (props) => {
     const router = useRouter();
 
     const { id } = router.query;
@@ -48,10 +75,10 @@ const BookWrapper: NextPage = () => {
     }
 
     if (id === 'new') {
-        return <NewBook />;
+        return <NewBook portalNode={props.portalNode} />;
     }
 
-    return <Book id={id as string} />;
+    return <Book id={id as string} portalNode={props.portalNode} />;
 };
 
 export default BookWrapper;

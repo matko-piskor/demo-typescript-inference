@@ -1,42 +1,65 @@
 import CategoryForm from 'components/CategoryForm';
 import { useRouter } from 'next/router';
-import { NextPage } from 'next/types';
 import React from 'react';
 import { trpc } from 'utils/trpc';
+import * as portals from 'react-reverse-portal';
+import { CustomPage } from 'pages/_app';
+
 type Props = {
     id: string;
+    portalNode: portals.HtmlPortalNode;
 };
 
-function Category({ id }: Props) {
-    const category = trpc.useQuery([
-        'category.get-by-id',
-        { id: parseInt(id, 10) },
-    ]);
+function Category(props: Props) {
+    const category = trpc.useQuery(
+        ['category.get-by-id', { id: parseInt(props.id, 10) }],
+        {
+            retry: false,
+        },
+    );
 
     const onSubmit = trpc.useMutation(['category.update']);
 
-    if (category.isError) {
-        return <div>Error</div>;
-    }
-
-    if (!category.data) {
-        return null;
-    }
-
-    return <CategoryForm data={category.data} onSubmit={onSubmit.mutate} />;
+    return (
+        <>
+            {category.isError && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={category.error?.message}
+                />
+            )}
+            {onSubmit.error && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={onSubmit.error?.message}
+                />
+            )}
+            <CategoryForm data={category.data} onSubmit={onSubmit.mutate} />
+        </>
+    );
 }
 
-function NewCategory() {
+function NewCategory(props: Omit<Props, 'id'>) {
     const router = useRouter();
 
     const onSubmit = trpc.useMutation(['category.create'], {
         onSuccess: () => router.push('/categories'),
     });
 
-    return <CategoryForm onSubmit={onSubmit.mutate} />;
+    return (
+        <>
+            {onSubmit.error && (
+                <portals.OutPortal
+                    node={props.portalNode}
+                    message={onSubmit.error?.message}
+                />
+            )}
+            <CategoryForm onSubmit={onSubmit.mutate} />
+        </>
+    );
 }
 
-const CategoryWrapper: NextPage = () => {
+const CategoryWrapper: CustomPage = (props) => {
     const router = useRouter();
 
     const { id } = router.query;
@@ -52,10 +75,10 @@ const CategoryWrapper: NextPage = () => {
     }
 
     if (id === 'new') {
-        return <NewCategory />;
+        return <NewCategory portalNode={props.portalNode} />;
     }
 
-    return <Category id={id as string} />;
+    return <Category id={id as string} portalNode={props.portalNode} />;
 };
 
 export default CategoryWrapper;
