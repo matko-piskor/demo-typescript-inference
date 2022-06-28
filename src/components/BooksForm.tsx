@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { BookInputValidatorType } from 'shared/validators';
+import { InferQueryOutput } from 'utils/trpc';
 
 type Props = {
-    data?: Partial<BookInputValidatorType>;
+    data?: InferQueryOutput<'book.get-by-id'>;
     onSubmit: (data: BookInputValidatorType) => void;
 };
 

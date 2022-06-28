@@ -22,6 +22,7 @@ function Category({ id }: Props) {
     if (!category.data) {
         return null;
     }
+
     return <CategoryForm data={category.data} onSubmit={onSubmit.mutate} />;
 }
 
