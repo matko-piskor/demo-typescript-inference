@@ -2,37 +2,31 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { booksValidator, BookValidator } from 'utils/validators';
+import { useMutation, useQuery } from 'react-query';
+import { booksValidator } from 'utils/validators';
 
 const Books: NextPage = () => {
-    const [books, setBooks] = React.useState<BookValidator[]>();
     const router = useRouter();
 
-    React.useEffect(() => {
-        fetch('/api/books')
+    const books = useQuery('books', () => {
+        return fetch('/api/books')
             .then((res) => res.json())
-            .then((res) => {
-                return booksValidator.parse(res);
-            })
-            .then(setBooks)
-            .catch(console.error);
-    }, []);
+            .then(booksValidator.parse);
+    });
 
-    const onDelete = React.useCallback((id: number) => {
+    const deleteBook = useMutation('delete-book', async (id: number) => {
         fetch(`/api/books/${id}/delete`, {
             method: 'DELETE',
-        })
-            .then(() => {
-                fetch('/api/books')
-                    .then((res) => res.json())
-                    .then((res) => {
-                        return booksValidator.parse(res);
-                    })
-                    .then(setBooks)
-                    .catch(console.error);
-            })
-            .catch(console.error);
-    }, []);
+        }).then(() => books.refetch());
+    });
+
+    if (books.isError) {
+        return <div>Error</div>;
+    }
+
+    if (books.isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
@@ -74,7 +68,7 @@ const Books: NextPage = () => {
                         </div>
                     </div>
                     {books &&
-                        books.map((book) => (
+                        books.data?.map((book) => (
                             <div
                                 key={book.id}
                                 className='bg-slate-200 flex border-slate-800'
@@ -106,7 +100,11 @@ const Books: NextPage = () => {
                                     </button>
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
-                                    <button onClick={() => onDelete(book.id)}>
+                                    <button
+                                        onClick={() =>
+                                            deleteBook.mutate(book.id)
+                                        }
+                                    >
                                         Delete
                                     </button>
                                 </div>

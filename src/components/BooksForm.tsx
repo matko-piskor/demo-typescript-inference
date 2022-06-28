@@ -1,14 +1,14 @@
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { Book } from 'utils/models';
+import { BookValidator } from 'utils/validators';
 
 type Props = {
-    data?: Book;
-    onSubmit: (data: Book) => void;
+    data?: BookValidator;
+    onSubmit: (data: BookValidator) => void;
 };
 
 export default function BookForm({ data, onSubmit }: Props) {
-    const form = useForm<Book>({ defaultValues: data });
+    const form = useForm<BookValidator>({ defaultValues: data });
     const router = useRouter();
     return (
         <div>
@@ -41,7 +41,10 @@ export default function BookForm({ data, onSubmit }: Props) {
                         <input
                             className='w-full px-2 pz-4'
                             type='number'
-                            {...form.register('categoryId', { required: true })}
+                            {...form.register('categoryId', {
+                                required: true,
+                                valueAsNumber: true,
+                            })}
                         />
                         <input type='submit' className='mb-7 cursor-pointer' />
                     </div>

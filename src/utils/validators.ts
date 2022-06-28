@@ -5,7 +5,7 @@ export const bookValidator = z.object({
     title: z.string(),
     author: z.string(),
     isRead: z.boolean(),
-    createdAt: z.date(),
+    createdAt: z.string(),
     categoryId: z.number(),
 });
 
@@ -17,8 +17,8 @@ export const bookInputValidator = z.object({
     id: z.number().optional(),
     title: z.string(),
     author: z.string(),
-    isRead: z.boolean(),
-    createdAt: z.date().optional(),
+    isRead: z.boolean().optional(),
+    createdAt: z.string().optional(),
     categoryId: z.number(),
 });
 

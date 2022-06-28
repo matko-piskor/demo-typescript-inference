@@ -2,33 +2,34 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { categoriesValidator, CategoryValidator } from 'utils/validators';
+import { useMutation, useQuery } from 'react-query';
+import { categoriesValidator } from 'utils/validators';
 
 const Categories: NextPage = () => {
-    const [categories, setCategories] = React.useState<CategoryValidator[]>();
     const router = useRouter();
 
-    React.useEffect(() => {
-        fetch('/api/categories')
+    const categories = useQuery('categories', () => {
+        return fetch('/api/categories')
             .then((res) => res.json())
-            .then((res) => categoriesValidator.parse(res))
-            .then(setCategories)
-            .catch(console.error);
-    }, []);
+            .then(categoriesValidator.parse);
+    });
 
-    const onDelete = React.useCallback((id: number) => {
-        fetch(`/api/categories/${id}/delete`, {
-            method: 'DELETE',
-        })
-            .then(() => {
-                fetch('/api/categories')
-                    .then((res) => res.json())
-                    .then((res) => categoriesValidator.parse(res))
-                    .then(setCategories)
-                    .catch(console.error);
-            })
-            .catch(console.error);
-    }, []);
+    const deleteCategory = useMutation(
+        'delete-category',
+        async (id: number) => {
+            fetch(`/api/categories/${id}/delete`, {
+                method: 'categories',
+            }).then(() => categories.refetch());
+        },
+    );
+
+    if (categories.isError) {
+        return <div>Error</div>;
+    }
+
+    if (categories.isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
@@ -62,7 +63,7 @@ const Categories: NextPage = () => {
                         </div>
                     </div>
                     {categories &&
-                        categories.map((category) => (
+                        categories.data?.map((category) => (
                             <div
                                 key={category.id}
                                 className='bg-slate-200 flex border-slate-800'
@@ -86,7 +87,9 @@ const Categories: NextPage = () => {
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
                                     <button
-                                        onClick={() => onDelete(category.id)}
+                                        onClick={() =>
+                                            deleteCategory.mutate(category.id)
+                                        }
                                     >
                                         Delete
                                     </button>

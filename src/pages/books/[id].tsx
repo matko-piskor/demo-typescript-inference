@@ -2,6 +2,7 @@ import BookForm from 'components/BooksForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
+import { useMutation, useQuery } from 'react-query';
 import {
     bookInputValidator,
     BookValidator,
@@ -12,64 +13,63 @@ type Props = {
 };
 
 function Book({ id }: Props) {
-    const [book, setBook] = React.useState<BookValidator>();
-
-    React.useEffect(() => {
-        fetch(`/api/books/${id}`)
+    const book = useQuery(['book', id], () => {
+        return fetch(`/api/books/${id}`)
             .then((res) => res.json())
-            .then((res) => bookValidator.parse(res))
-            .then(setBook)
-            .catch(console.error);
-    }, [id]);
+            .then(bookValidator.parse);
+    });
 
-    const onSubmit = (data: BookValidator) => {
-        try {
-            bookInputValidator.parse(data);
-        } catch (err) {
-            console.error(data);
-            return;
-        }
-        fetch(`/api/books/${id}/edit`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        })
-            .then((res) => res.json())
-            .then((res) => bookValidator.parse(res))
-            .then(setBook)
-            .catch(console.error);
-    };
+    const onSubmit = useMutation(
+        ['update-book', id],
+        async (data: BookValidator) => {
+            try {
+                bookInputValidator.parse(data);
+            } catch (err) {
+                console.error(data);
+                return;
+            }
+            fetch(`/api/books/${id}/edit`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+                .then((res) => res.json())
+                .then(bookValidator.parse);
+        },
+    );
 
-    if (!book) {
+    if (!book.data) {
         return null;
     }
-    return <BookForm data={book} onSubmit={onSubmit} />;
+    return <BookForm data={book.data} onSubmit={onSubmit.mutate} />;
 }
 
 function NewBook() {
     const router = useRouter();
 
-    const onSubmit = (data: BookValidator) => {
-        try {
-            bookInputValidator.parse(data);
-        } catch (err) {
-            console.error(data);
-            return;
-        }
-        fetch(`/api/books/new`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        })
-            .then((res) => res.json())
-            .then((res) => bookValidator.parse(res))
-            .then((res) => {
-                router.push(`/books/${res.id}`);
+    const onSubmit = useMutation(
+        ['create-book'],
+        async (data: BookValidator) => {
+            try {
+                bookInputValidator.parse(data);
+            } catch (err) {
+                console.error(data);
+                return;
+            }
+            fetch(`/api/books/new`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
             })
-            .catch(console.error);
-    };
+                .then((res) => res.json())
+                .then((res) => bookValidator.parse(res))
+                .then((res) => {
+                    router.push(`/books/${res.id}`);
+                });
+        },
+    );
 
-    return <BookForm onSubmit={onSubmit} />;
+    return <BookForm onSubmit={onSubmit.mutate} />;
 }
 
 const BookWrapper: NextPage = () => {
