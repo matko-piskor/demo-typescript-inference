@@ -19,7 +19,7 @@ function Category({ id }: Props) {
 
     const onSubmit = (data: Category) => {
         fetch(`/api/categories/${id}/edit`, {
-            method: category ? 'PUT' : 'POST',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
@@ -38,7 +38,6 @@ function NewCategory() {
     const router = useRouter();
 
     const onSubmit = (data: Category) => {
-        console.log(data);
         fetch(`/api/categories/new`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -46,7 +45,6 @@ function NewCategory() {
         })
             .then((res) => res.json())
             .then((res) => {
-                console.log(res);
                 router.push(`/categories/${res.id}`);
             })
             .catch(console.error);

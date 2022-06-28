@@ -19,7 +19,7 @@ function Book({ id }: Props) {
 
     const onSubmit = (data: Book) => {
         fetch(`/api/books/${id}/edit`, {
-            method: book ? 'PUT' : 'POST',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
@@ -46,7 +46,6 @@ function NewBook() {
         })
             .then((res) => res.json())
             .then((res) => {
-                console.log(res);
                 router.push(`/books/${res.id}`);
             })
             .catch(console.error);
