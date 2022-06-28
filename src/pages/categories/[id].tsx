@@ -2,28 +2,40 @@ import CategoryForm from 'components/CategoryForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { Category } from 'utils/models';
+import {
+    categoryInputValidator,
+    CategoryValidator,
+    categoryValidator,
+} from 'utils/validators';
 type Props = {
     id: string;
 };
 
 function Category({ id }: Props) {
-    const [category, setCategory] = React.useState<Category>();
+    const [category, setCategory] = React.useState<CategoryValidator>();
 
     React.useEffect(() => {
         fetch(`/api/categories/${id}`)
             .then((res) => res.json())
+            .then(categoryValidator.parse)
             .then(setCategory)
             .catch(console.error);
     }, [id]);
 
-    const onSubmit = (data: Category) => {
+    const onSubmit = (data: CategoryValidator) => {
+        try {
+            categoryInputValidator.parse(data);
+        } catch (err) {
+            console.error(data);
+            return;
+        }
         fetch(`/api/categories/${id}/edit`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
+            .then(categoryValidator.parse)
             .then(setCategory)
             .catch(console.error);
     };
@@ -37,13 +49,20 @@ function Category({ id }: Props) {
 function NewCategory() {
     const router = useRouter();
 
-    const onSubmit = (data: Category) => {
+    const onSubmit = (data: CategoryValidator) => {
+        try {
+            categoryInputValidator.parse(data);
+        } catch (err) {
+            console.error(data);
+            return;
+        }
         fetch(`/api/categories/new`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
+            .then(categoryValidator.parse)
             .then((res) => {
                 router.push(`/categories/${res.id}`);
             })

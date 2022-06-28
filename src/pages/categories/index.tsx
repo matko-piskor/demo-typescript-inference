@@ -2,15 +2,16 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { Category } from 'utils/models';
+import { categoriesValidator, CategoryValidator } from 'utils/validators';
 
 const Categories: NextPage = () => {
-    const [categories, setCategories] = React.useState<Category[]>();
+    const [categories, setCategories] = React.useState<CategoryValidator[]>();
     const router = useRouter();
 
     React.useEffect(() => {
         fetch('/api/categories')
             .then((res) => res.json())
+            .then((res) => categoriesValidator.parse(res))
             .then(setCategories)
             .catch(console.error);
     }, []);
@@ -22,6 +23,7 @@ const Categories: NextPage = () => {
             .then(() => {
                 fetch('/api/categories')
                     .then((res) => res.json())
+                    .then((res) => categoriesValidator.parse(res))
                     .then(setCategories)
                     .catch(console.error);
             })

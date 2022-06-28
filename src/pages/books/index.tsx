@@ -2,15 +2,18 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { Book } from 'utils/models';
+import { booksValidator, BookValidator } from 'utils/validators';
 
 const Books: NextPage = () => {
-    const [books, setBooks] = React.useState<Book[]>();
+    const [books, setBooks] = React.useState<BookValidator[]>();
     const router = useRouter();
 
     React.useEffect(() => {
         fetch('/api/books')
             .then((res) => res.json())
+            .then((res) => {
+                return booksValidator.parse(res);
+            })
             .then(setBooks)
             .catch(console.error);
     }, []);
@@ -22,6 +25,9 @@ const Books: NextPage = () => {
             .then(() => {
                 fetch('/api/books')
                     .then((res) => res.json())
+                    .then((res) => {
+                        return booksValidator.parse(res);
+                    })
                     .then(setBooks)
                     .catch(console.error);
             })

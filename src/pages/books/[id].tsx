@@ -2,28 +2,40 @@ import BookForm from 'components/BooksForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { Book } from 'utils/models';
+import {
+    bookInputValidator,
+    BookValidator,
+    bookValidator,
+} from 'utils/validators';
 type Props = {
     id: string;
 };
 
 function Book({ id }: Props) {
-    const [book, setBook] = React.useState<Book>();
+    const [book, setBook] = React.useState<BookValidator>();
 
     React.useEffect(() => {
         fetch(`/api/books/${id}`)
             .then((res) => res.json())
+            .then((res) => bookValidator.parse(res))
             .then(setBook)
             .catch(console.error);
     }, [id]);
 
-    const onSubmit = (data: Book) => {
+    const onSubmit = (data: BookValidator) => {
+        try {
+            bookInputValidator.parse(data);
+        } catch (err) {
+            console.error(data);
+            return;
+        }
         fetch(`/api/books/${id}/edit`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
+            .then((res) => bookValidator.parse(res))
             .then(setBook)
             .catch(console.error);
     };
@@ -37,14 +49,20 @@ function Book({ id }: Props) {
 function NewBook() {
     const router = useRouter();
 
-    const onSubmit = (data: Book) => {
-        console.log(data);
+    const onSubmit = (data: BookValidator) => {
+        try {
+            bookInputValidator.parse(data);
+        } catch (err) {
+            console.error(data);
+            return;
+        }
         fetch(`/api/books/new`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
+            .then((res) => bookValidator.parse(res))
             .then((res) => {
                 router.push(`/books/${res.id}`);
             })
