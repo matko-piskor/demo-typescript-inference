@@ -2,26 +2,16 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { categoriesValidator } from 'utils/validators';
+import { trpc } from 'utils/trpc';
 
 const Categories: NextPage = () => {
     const router = useRouter();
 
-    const categories = useQuery('categories', () => {
-        return fetch('/api/categories')
-            .then((res) => res.json())
-            .then(categoriesValidator.parse);
-    });
+    const categories = trpc.useQuery(['category.get-all']);
 
-    const deleteCategory = useMutation(
-        'delete-category',
-        async (id: number) => {
-            fetch(`/api/categories/${id}/delete`, {
-                method: 'categories',
-            }).then(() => categories.refetch());
-        },
-    );
+    const deleteCategory = trpc.useMutation(['category.delete'], {
+        onSuccess: () => categories.refetch(),
+    });
 
     if (categories.isError) {
         return <div>Error</div>;
@@ -88,7 +78,9 @@ const Categories: NextPage = () => {
                                 <div className='w-full px-2 pz-4 capitalize'>
                                     <button
                                         onClick={() =>
-                                            deleteCategory.mutate(category.id)
+                                            deleteCategory.mutate({
+                                                id: category.id,
+                                            })
                                         }
                                     >
                                         Delete

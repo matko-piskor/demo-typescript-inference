@@ -2,72 +2,35 @@ import CategoryForm from 'components/CategoryForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { useMutation, useQuery } from 'react-query';
-import {
-    categoryInputValidator,
-    CategoryValidator,
-    categoryValidator,
-} from 'utils/validators';
+import { trpc } from 'utils/trpc';
 type Props = {
     id: string;
 };
 
 function Category({ id }: Props) {
-    const category = useQuery(['categories', id], () => {
-        fetch(`/api/categories/${id}`)
-            .then((res) => res.json())
-            .then((res) => categoryValidator.parse(res));
-    });
+    const category = trpc.useQuery([
+        'category.get-by-id',
+        { id: parseInt(id, 10) },
+    ]);
 
-    const onSubmit = useMutation(
-        ['update-category', id],
-        async (data: CategoryValidator) => {
-            try {
-                categoryInputValidator.parse(data);
-            } catch (err) {
-                console.error(data);
-                return;
-            }
-            fetch(`/api/books/${id}/edit`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            })
-                .then((res) => res.json())
-                .then((res) => categoryValidator.parse(res));
-        },
-    );
+    const onSubmit = trpc.useMutation(['category.update']);
 
-    if (!category) {
+    if (category.isError) {
+        return <div>Error</div>;
+    }
+
+    if (!category.data) {
         return null;
     }
-    return <CategoryForm data={category} onSubmit={onSubmit.mutate} />;
+    return <CategoryForm data={category.data} onSubmit={onSubmit.mutate} />;
 }
 
 function NewCategory() {
     const router = useRouter();
 
-    const onSubmit = useMutation(
-        ['create-category'],
-        async (data: CategoryValidator) => {
-            try {
-                categoryInputValidator.parse(data);
-            } catch (err) {
-                console.error(data);
-                return;
-            }
-            fetch(`/api/categories/new`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            })
-                .then((res) => res.json())
-                .then(categoryValidator.parse)
-                .then((res) => {
-                    router.push(`/categories/${res.id}`);
-                });
-        },
-    );
+    const onSubmit = trpc.useMutation(['category.create'], {
+        onSuccess: () => router.push('/categories'),
+    });
 
     return <CategoryForm onSubmit={onSubmit.mutate} />;
 }

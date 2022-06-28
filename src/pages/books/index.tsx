@@ -2,22 +2,15 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { booksValidator } from 'utils/validators';
+import { trpc } from 'utils/trpc';
 
 const Books: NextPage = () => {
     const router = useRouter();
 
-    const books = useQuery('books', () => {
-        return fetch('/api/books')
-            .then((res) => res.json())
-            .then(booksValidator.parse);
-    });
+    const books = trpc.useQuery(['book.get-all']);
 
-    const deleteBook = useMutation('delete-book', async (id: number) => {
-        fetch(`/api/books/${id}/delete`, {
-            method: 'DELETE',
-        }).then(() => books.refetch());
+    const deleteBook = trpc.useMutation(['book.delete'], {
+        onSuccess: () => books.refetch(),
     });
 
     if (books.isError) {
@@ -102,7 +95,7 @@ const Books: NextPage = () => {
                                 <div className='w-full px-2 pz-4 capitalize'>
                                     <button
                                         onClick={() =>
-                                            deleteBook.mutate(book.id)
+                                            deleteBook.mutate({ id: book.id })
                                         }
                                     >
                                         Delete

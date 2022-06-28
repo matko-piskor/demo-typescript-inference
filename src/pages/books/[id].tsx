@@ -2,41 +2,19 @@ import BookForm from 'components/BooksForm';
 import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
-import { useMutation, useQuery } from 'react-query';
-import {
-    bookInputValidator,
-    BookValidator,
-    bookValidator,
-} from 'utils/validators';
+import { trpc } from 'utils/trpc';
 type Props = {
     id: string;
 };
 
 function Book({ id }: Props) {
-    const book = useQuery(['book', id], () => {
-        return fetch(`/api/books/${id}`)
-            .then((res) => res.json())
-            .then(bookValidator.parse);
-    });
+    const book = trpc.useQuery(['book.get-by-id', { id: parseInt(id, 10) }]);
 
-    const onSubmit = useMutation(
-        ['update-book', id],
-        async (data: BookValidator) => {
-            try {
-                bookInputValidator.parse(data);
-            } catch (err) {
-                console.error(data);
-                return;
-            }
-            fetch(`/api/books/${id}/edit`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            })
-                .then((res) => res.json())
-                .then(bookValidator.parse);
-        },
-    );
+    const onSubmit = trpc.useMutation(['book.update']);
+
+    if (book.isError) {
+        return <div>Error</div>;
+    }
 
     if (!book.data) {
         return null;
@@ -47,27 +25,9 @@ function Book({ id }: Props) {
 function NewBook() {
     const router = useRouter();
 
-    const onSubmit = useMutation(
-        ['create-book'],
-        async (data: BookValidator) => {
-            try {
-                bookInputValidator.parse(data);
-            } catch (err) {
-                console.error(data);
-                return;
-            }
-            fetch(`/api/books/new`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            })
-                .then((res) => res.json())
-                .then((res) => bookValidator.parse(res))
-                .then((res) => {
-                    router.push(`/books/${res.id}`);
-                });
-        },
-    );
+    const onSubmit = trpc.useMutation(['book.create'], {
+        onSuccess: () => router.push('/books'),
+    });
 
     return <BookForm onSubmit={onSubmit.mutate} />;
 }

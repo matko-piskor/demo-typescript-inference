@@ -1,14 +1,14 @@
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { BookValidator } from 'utils/validators';
+import { BookInputValidatorType } from 'shared/validators';
 
 type Props = {
-    data?: BookValidator;
-    onSubmit: (data: BookValidator) => void;
+    data?: Partial<BookInputValidatorType>;
+    onSubmit: (data: BookInputValidatorType) => void;
 };
 
 export default function BookForm({ data, onSubmit }: Props) {
-    const form = useForm<BookValidator>({ defaultValues: data });
+    const form = useForm<BookInputValidatorType>({ defaultValues: data });
     const router = useRouter();
     return (
         <div>

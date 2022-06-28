@@ -1,15 +1,15 @@
-import { Category } from 'utils/models';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
+import { CategoryInputValidatorType } from 'shared/validators';
 
 type Props = {
-    data?: Category;
-    onSubmit: (data: Category) => void;
+    data?: Partial<CategoryInputValidatorType>;
+    onSubmit: (data: CategoryInputValidatorType) => void;
 };
 
 export default function CategoryForm({ data, onSubmit }: Props) {
     const router = useRouter();
-    const form = useForm<Category>({ defaultValues: data });
+    const form = useForm<CategoryInputValidatorType>({ defaultValues: data });
 
     return (
         <div>
