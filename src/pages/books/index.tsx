@@ -1,10 +1,12 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
 import { Book } from 'utils/models';
 
 const Books: NextPage = () => {
     const [books, setBooks] = React.useState<Book[]>();
+    const router = useRouter();
 
     React.useEffect(() => {
         fetch('/api/books')
@@ -20,6 +22,9 @@ const Books: NextPage = () => {
                 <link rel='icon' href='/favicon.ico' />
             </Head>
             <div className='min-h-screen m-3'>
+                <h3 className='cursor-pointer' onClick={() => router.push('/')}>
+                    Back
+                </h3>
                 <h1 className='text-3xl mb-7'>Books</h1>
                 <button className='mb-7 cursor-pointer'>New</button>
                 <div className='flex flex-col w-100'>

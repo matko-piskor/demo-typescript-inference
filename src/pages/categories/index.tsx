@@ -1,15 +1,30 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { NextPage } from 'next/types';
 import React from 'react';
 import { Category } from 'utils/models';
 
 const Categories: NextPage = () => {
     const [categories, setCategories] = React.useState<Category[]>();
+    const router = useRouter();
 
     React.useEffect(() => {
         fetch('/api/categories')
             .then((res) => res.json())
             .then(setCategories)
+            .catch(console.error);
+    }, []);
+
+    const onDelete = React.useCallback((id: number) => {
+        fetch(`/api/categories/${id}/delete`, {
+            method: 'DELETE',
+        })
+            .then(() => {
+                fetch('/api/categories')
+                    .then((res) => res.json())
+                    .then(setCategories)
+                    .catch(console.error);
+            })
             .catch(console.error);
     }, []);
 
@@ -20,8 +35,18 @@ const Categories: NextPage = () => {
                 <link rel='icon' href='/favicon.ico' />
             </Head>
             <div className='min-h-screen m-3'>
+                <h3 className='cursor-pointer' onClick={() => router.push('/')}>
+                    Back
+                </h3>
                 <h1 className='text-3xl mb-7'>Categories</h1>
-                <button className='mb-7 cursor-pointer'>New</button>
+                <button
+                    className='mb-7 cursor-pointer'
+                    onClick={() => {
+                        router.push(`/categories/new`);
+                    }}
+                >
+                    New
+                </button>
                 <div className='flex flex-col w-100'>
                     <div className='bg-slate-400 flex border-slate-800'>
                         <div className='w-full px-2 pz-4 capitalize mx-auto'>
@@ -47,10 +72,22 @@ const Categories: NextPage = () => {
                                     {category.name}
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
-                                    <button>Edit</button>
+                                    <button
+                                        onClick={() => {
+                                            router.push(
+                                                `/categories/${category.id}`,
+                                            );
+                                        }}
+                                    >
+                                        Edit
+                                    </button>
                                 </div>
                                 <div className='w-full px-2 pz-4 capitalize'>
-                                    <button>Delete</button>
+                                    <button
+                                        onClick={() => onDelete(category.id)}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         ))}
